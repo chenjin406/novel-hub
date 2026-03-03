@@ -193,7 +193,7 @@ async function processCrawlTranslateJob(
       .eq('id', jobId);
 
     // Download and parse content
-    let chapters = [];
+    let chapters: Array<{title: string; content: string}> = [];
     if (details.formats.html) {
       const result = await downloadBookContent(`https://www.gutenberg.org${details.formats.html}`);
       if (result) chapters = result.chapters;
@@ -259,7 +259,7 @@ async function processCrawlTranslateJob(
     
     await supabaseAdmin
       .from('crawl_jobs')
-      .update({ status: 'failed', error: error.message })
+      .update({ status: 'failed', error: error instanceof Error ? error.message : String(error) })
       .eq('id', jobId);
   }
 }
