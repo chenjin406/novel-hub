@@ -1,13 +1,23 @@
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  language: string;
+  total_chapters: number;
+  cover_url?: string;
+  description?: string;
+}
+
 async function getBooks() {
   const { data } = await supabase
     .from('books')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(20);
-  return data || [];
+  return (data as Book[]) || [];
 }
 
 export default async function Home() {

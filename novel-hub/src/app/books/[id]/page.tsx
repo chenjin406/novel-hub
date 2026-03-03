@@ -2,6 +2,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
+interface Chapter {
+  id: string;
+  chapter_number: number;
+  title: string;
+  content_en?: string;
+}
+
 async function getBook(id: string) {
   const { data: book } = await supabase
     .from('books')
@@ -17,7 +24,7 @@ async function getBook(id: string) {
     .eq('book_id', id)
     .order('chapter_number', { ascending: true });
 
-  return { book, chapters: chapters || [] };
+  return { book, chapters: (chapters as Chapter[]) || [] };
 }
 
 export default async function BookPage({
