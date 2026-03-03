@@ -7,17 +7,30 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 // Create mock Supabase client for fallback
 const createMockClient = () => ({
-  from: (table: string) => ({
-    select: () => ({
-      eq: () => ({ data: mockDb.getBooks(), error: null }),
+  from: (table: string) => {
+    const baseQuery = {
+      eq: (column: string, value: any) => {
+        let data: any[] = [];
+        if (table === 'books') {
+          data = column === 'id' ? mockDb.getBooks().filter(b => b.id === value) : mockDb.getBooks();
+        } else if (table === 'chapters') {
+          data = column === 'book_id' ? mockDb.getChapters(value) : [];
+        }
+        return { data, error: null };
+      },
       single: () => ({ data: mockDb.getBooks()[0], error: null }),
-      order: () => ({ data: mockDb.getBooks(), error: null })
-    }),
-    insert: (data: any) => ({ data: [data], error: null }),
-    update: (data: any) => ({ data: [data], error: null }),
-    delete: () => ({ data: [], error: null }),
-    eq: () => ({ data: [], error: null })
-  })
+      order: (column: string, options?: any) => ({ data: mockDb.getBooks(), error: null }),
+      limit: (count: number) => ({ data: mockDb.getBooks().slice(0, count), error: null })
+    };
+    
+    return {
+      select: () => baseQuery,
+      insert: (data: any) => ({ data: [data], error: null }),
+      update: (data: any) => ({ data: [data], error: null }),
+      delete: () => ({ data: [], error: null }),
+      ...baseQuery
+    };
+  }
 });
 
 // Use mock database if Supabase credentials are not available
