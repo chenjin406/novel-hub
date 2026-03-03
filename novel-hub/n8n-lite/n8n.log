@@ -1,0 +1,7 @@
+
+> n8n-lite@1.0.0 start
+> node server.js
+
+🕷️  n8n-lite server running on http://localhost:5678
+📚 NovelHub integration ready
+🔗 Webhook endpoint: http://localhost:5678/webhook/:workflowId

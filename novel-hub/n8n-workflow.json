@@ -1,0 +1,251 @@
+{
+  "name": "NovelHub Crawler & Translator",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "trigger-crawl",
+        "options": {}
+      },
+      "id": "trigger-node",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.gutenberg.org/ebooks/{{$json.gutenbergId}}",
+        "options": {
+          "timeout": 30000,
+          "headers": {
+            "User-Agent": "NovelHub-Crawler/1.0"
+          }
+        }
+      },
+      "id": "fetch-book",
+      "name": "Fetch Book Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse book details from HTML\nconst html = $json.response;\nconst title = html.match(/<h1[^>]*>([^<]+)<\/h1>/)?.[1] || 'Unknown Title';\nconst author = html.match(/<a[^>]*itemprop=\"creator\"[^>]*>([^<]+)<\/a>/)?.[1] || 'Unknown Author';\nconst description = html.match(/<div[^>]*itemprop=\"description\"[^>]*>([^<]+)<\/div>/)?.[1] || '';\n\nreturn {\n  title: title.trim(),\n  author: author.trim(),\n  description: description.trim(),\n  gutenbergId: $json.gutenbergId,\n  translate: $json.translate\n};"
+      },
+      "id": "parse-details",
+      "name": "Parse Book Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.gutenberg.org/files/{{$json.gutenbergId}}/{{$json.gutenbergId}}-0.txt",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-text",
+      "name": "Fetch Book Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1.1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split text into chapters\nconst text = $json.response;\nconst chapters = [];\nconst lines = text.split('\\n');\nlet currentChapter = null;\nlet currentContent = [];\n\nfor (const line of lines) {\n  const trimmed = line.trim();\n  \n  // Look for chapter markers\n  if (trimmed.match(/^第[一二三四五六七八九十百千万零\\d]+[章节回]/) || \n      trimmed.match(/^Chapter\\s+\\d+/i) ||\n      trimmed.match(/^CHAPTER\\s+\\d+/)) {\n    \n    if (currentChapter) {\n      chapters.push({\n        title: currentChapter,\n        content: currentContent.join('\\n').trim()\n      });\n    }\n    \n    currentChapter = trimmed;\n    currentContent = [];\n  } else if (currentChapter) {\n    if (trimmed.length > 0) {\n      currentContent.push(trimmed);\n    }\n  }\n}\n\n// Add final chapter\nif (currentChapter) {\n  chapters.push({\n      title: currentChapter,\n    content: currentContent.join('\\n').trim()\n  });\n}\n\n// If no chapters found, treat as single chapter\nif (chapters.length === 0) {\n  chapters.push({\n    title: 'Full Text',\n    content: text.trim()\n  });\n}\n\nreturn {\n  ...$json,\n  chapters: chapters.slice(0, 10), // Limit to first 10 chapters for demo\n  totalChapters: chapters.length\n};"
+      },
+      "id": "split-chapters",
+      "name": "Split into Chapters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.translate }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ]
+        }
+      },
+      "id": "check-translate",
+      "name": "Need Translation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1.1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "model": "={{ $json.aiModel || 'gpt-3.5-turbo' }}",
+        "messages": {
+          "systemMessage": "You are a professional translator. Translate the following Chinese text to English. Preserve the formatting, style, and tone of the original text. Only output the translated text, no explanations.",
+          "userMessage": "={{ $json.chapter.content }}"
+        },
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 4000
+        }
+      },
+      "id": "translate-chapter",
+      "name": "Translate Chapter",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.1,
+      "position": [1250, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare data for webhook callback\nconst chapters = $json.chapters || [];\nconst translatedContent = $json.response || '';\n\nreturn {\n  status: 'completed',\n  data: {\n    bookId: $json.bookId,\n    totalChapters: chapters.length,\n    chapters: chapters.map((ch, index) => ({\n      chapter_number: index + 1,\n      title: ch.title,\n      content: ch.content,\n      content_en: translatedContent\n    }))\n  }\n};"
+      },
+      "id": "prepare-callback",
+      "name": "Prepare Webhook Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.webhookUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        },
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "data",
+              "value": "={{ JSON.stringify($json.data) }}"
+            }
+          ]
+        }
+      },
+      "id": "webhook-callback",
+      "name": "Webhook Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1.1,
+      "position": [1650, 300]
+    }
+  ],
+  "connections": {
+    "trigger-node": {
+      "main": [
+        [
+          {
+            "node": "fetch-book",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-book": {
+      "main": [
+        [
+          {
+            "node": "parse-details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse-details": {
+      "main": [
+        [
+          {
+            "node": "fetch-text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-text": {
+      "main": [
+        [
+          {
+            "node": "split-chapters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-chapters": {
+      "main": [
+        [
+          {
+            "node": "check-translate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-translate": {
+      "main": [
+        [
+          {
+            "node": "prepare-callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "translate-chapter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "translate-chapter": {
+      "main": [
+        [
+          {
+            "node": "prepare-callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare-callback": {
+      "main": [
+        [
+          {
+            "node": "webhook-callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "instanceId": "novelhub-n8n-instance"
+  }
+}
