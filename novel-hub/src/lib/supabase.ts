@@ -1,14 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
+import mockDb from './mock-db';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-// Client-side Supabase client (public operations)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Use mock database if Supabase credentials are not available
+if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+  console.warn('Supabase credentials not found, using mock database');
+  
+  // Create mock Supabase client
+  const mockClient = {
+    from: (table: string) => ({
+      select: () => ({
+        eq: () => ({ data: mockDb.getBooks(), error: null }),
+        single: () => ({ data: mockDb.getBooks()[0], error: null }),
+        order: () => ({ data: mockDb.getBooks(), error: null })
+      }),
+      insert: (data: any) => ({ data: [data], error: null }),
+      update: (data: any) => ({ data: [data], error: null }),
+      delete: () => ({ data: [], error: null }),
+      eq: () => ({ data: [], error: null })
+    })
+  };
+  
+  export const supabase = mockClient as any;
+  export const supabaseAdmin = mockClient as any;
+} else {
+  // Client-side Supabase client (public operations)
+  export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Server-side Supabase client with service role (admin operations)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  // Server-side Supabase client with service role (admin operations)
+  export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+}
 
 // Database types
 export interface Database {
