@@ -27,21 +27,7 @@ export interface UserProfile extends User {
 
 // 创建 Supabase 客户端
 function createSupabaseClient() {
-  const cookieStore = cookies();
-  
-  return createClient(supabaseUrl!, supabaseAnonKey!, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-      set(name: string, value: string, options: any) {
-        cookieStore.set({ name, value, ...options });
-      },
-      remove(name: string, options: any) {
-        cookieStore.set({ name, value: '', ...options });
-      },
-    },
-  });
+  return createClient(supabaseUrl!, supabaseAnonKey!);
 }
 
 // 用户认证相关函数

@@ -152,10 +152,10 @@ export async function getReadingStats(userId: string) {
   
   const stats = {
     total_books: data.length,
-    reading: data.filter(item => item.status === 'reading').length,
-    completed: data.filter(item => item.status === 'completed').length,
-    total_chapters: data.reduce((sum, item) => sum + (item.book?.total_chapters || 0), 0),
-    avg_progress: data.length > 0 ? Math.round(data.reduce((sum, item) => sum + item.reading_progress, 0) / data.length) : 0
+    reading: data.filter((item: any) => item.status === 'reading').length,
+    completed: data.filter((item: any) => item.status === 'completed').length,
+    total_chapters: data.reduce((sum: number, item: any) => sum + (item.book?.total_chapters || 0), 0),
+    avg_progress: data.length > 0 ? Math.round(data.reduce((sum: number, item: any) => sum + item.reading_progress, 0) / data.length) : 0
   };
   
   return stats;

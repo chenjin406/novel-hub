@@ -152,7 +152,7 @@ export async function processPaymentSuccess(orderId: string, transactionId: stri
   );
   
   if (coinError) {
-    return { error: coinError.message };
+    return { error: typeof coinError === 'string' ? coinError : (coinError as any).message || '添加起点币失败' };
   }
   
   return { data: { success: true } };
@@ -195,7 +195,7 @@ export async function unlockChapter(userId: string, bookId: string, chapterId: s
   );
   
   if (coinError) {
-    return { error: coinError.message };
+    return { error: typeof coinError === 'string' ? coinError : (coinError as any).message || '扣除起点币失败' };
   }
   
   // 记录解锁的章节

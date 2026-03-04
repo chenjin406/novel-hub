@@ -2,13 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const registered = searchParams.get('registered') === 'true';
-  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -81,12 +78,6 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-        
-        {registered && (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg text-sm">
-            🎉 注册成功！欢迎加入 NovelHub，请登录开始您的阅读之旅。
-          </div>
-        )}
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
