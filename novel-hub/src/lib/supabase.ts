@@ -8,27 +8,47 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 // Create mock Supabase client for fallback
 const createMockClient = () => ({
   from: (table: string) => {
-    const baseQuery = {
-      eq: (column: string, value: any) => {
-        let data: any[] = [];
-        if (table === 'books') {
-          data = column === 'id' ? mockDb.getBooks().filter(b => b.id === value) : mockDb.getBooks();
-        } else if (table === 'chapters') {
-          data = column === 'book_id' ? mockDb.getChapters(value) : [];
-        }
-        return { data, error: null };
-      },
-      single: () => ({ data: mockDb.getBooks()[0], error: null }),
-      order: (column: string, options?: any) => ({ data: mockDb.getBooks(), error: null }),
-      limit: (count: number) => ({ data: mockDb.getBooks().slice(0, count), error: null })
-    };
+    if (table === 'books') {
+      let booksData = mockDb.getBooks();
+      
+      const booksChain = {
+        select: () => booksChain,
+        order: (column: string, options?: any) => booksChain,
+        limit: (count: number) => {
+          booksData = booksData.slice(0, count);
+          return { data: booksData, error: null };
+        },
+        eq: (column: string, value: any) => {
+          booksData = booksData.filter((b: any) => b.id === value);
+          return { data: booksData, error: null };
+        },
+        single: () => ({ data: booksData[0] || null, error: null })
+      };
+      
+      return booksChain;
+    } else if (table === 'chapters') {
+      let chaptersData: any[] = [];
+      
+      const chaptersChain = {
+        select: () => chaptersChain,
+        order: (column: string, options?: any) => chaptersChain,
+        eq: (column: string, value: any) => {
+          chaptersData = mockDb.getChapters(value);
+          return { data: chaptersData, error: null };
+        },
+        single: () => ({ data: chaptersData[0] || null, error: null })
+      };
+      
+      return chaptersChain;
+    }
     
+    // Default empty chain for unknown tables
     return {
-      select: () => baseQuery,
-      insert: (data: any) => ({ data: [data], error: null }),
-      update: (data: any) => ({ data: [data], error: null }),
-      delete: () => ({ data: [], error: null }),
-      ...baseQuery
+      select: () => ({ data: [], error: null }),
+      order: () => ({ data: [], error: null }),
+      limit: () => ({ data: [], error: null }),
+      eq: () => ({ data: [], error: null }),
+      single: () => ({ data: null, error: null })
     };
   }
 });
