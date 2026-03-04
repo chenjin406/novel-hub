@@ -2,18 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  User, 
-  Coin, 
-  Crown, 
-  BookOpen, 
-  Clock, 
-  Star,
-  Settings,
-  LogOut,
-  Wallet,
-  TrendingUp
-} from '@mui/icons-material';
+import Link from 'next/link';
+
+// 简化的图标组件
+const UserIcon = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>;
+const CoinIcon = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" /><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.382-.116-.84-.262-1.319-.478C6.67 14.173 6 13.102 6 12c0-1.102.67-2.173 1.68-2.858.48-.216 1.037-.362 1.68-.478V5zm-2 0v.092a4.535 4.535 0 01-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.382-.116-.84-.262-1.319-.478C6.67 14.173 6 13.102 6 12c0-1.102.67-2.173 1.68-2.858.48-.216 1.037-.362 1.68-.478V5z" clipRule="evenodd" /></svg>;
+const CrownIcon = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 16H6v-6h2v6zm4 0h-2v-6h2v6zm4 0h-2V8a1 1 0 00-1-1h-2V5a1 1 0 011-1h2a1 1 0 011 1v11z" clipRule="evenodd" /></svg>;
+const BookOpenIcon = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>;
+const ClockIcon = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>;
+const SettingsIcon = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>;
+const LogOutIcon = () => <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>;
+const WalletIcon = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" /></svg>;
 
 interface UserProfile {
   id: string;
@@ -117,7 +116,7 @@ export default function ProfilePage() {
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
-              <LogOut className="w-4 h-4" />
+              <span className="w-4 h-4"><LogOutIcon /></span>
               退出登录
             </button>
           </div>
@@ -131,14 +130,14 @@ export default function ProfilePage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
+                  <span className="w-10 h-10"><UserIcon /></span>
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user.username}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
                 <div className={`mt-2 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                   isVIP ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}>
-                  <Crown className="w-3 h-3" />
+                  <span className="w-3 h-3"><CrownIcon /></span>
                   {getVIPLevelName(user.vip_level)}
                   {isVIP && <span>({vipDaysLeft}天)</span>}
                 </div>
@@ -146,10 +145,10 @@ export default function ProfilePage() {
 
               <nav className="space-y-2">
                 {[
-                  { id: 'overview', label: '个人中心', icon: User },
-                  { id: 'bookshelf', label: '我的书架', icon: BookOpen },
-                  { id: 'wallet', label: '我的钱包', icon: Wallet },
-                  { id: 'settings', label: '账户设置', icon: Settings },
+                  { id: 'overview', label: '个人中心', icon: UserIcon },
+                  { id: 'bookshelf', label: '我的书架', icon: BookOpenIcon },
+                  { id: 'wallet', label: '我的钱包', icon: WalletIcon },
+                  { id: 'settings', label: '账户设置', icon: SettingsIcon },
                 ].map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -160,7 +159,7 @@ export default function ProfilePage() {
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <span className="w-4 h-4"><Icon /></span>
                     {label}
                   </button>
                 ))}
@@ -178,7 +177,7 @@ export default function ProfilePage() {
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                     <div className="flex items-center">
                       <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                        <Coin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        <span className="w-6 h-6"><CoinIcon /></span>
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">起点币余额</p>
@@ -190,7 +189,7 @@ export default function ProfilePage() {
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                     <div className="flex items-center">
                       <div className={`p-2 rounded-lg ${isVIP ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                        <Crown className={`w-6 h-6 ${isVIP ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}`} />
+                        <span className={`w-6 h-6 ${isVIP ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}`}><CrownIcon /></span>
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">会员状态</p>
@@ -204,7 +203,7 @@ export default function ProfilePage() {
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                     <div className="flex items-center">
                       <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                        <BookOpen className="w-6 h-6 text-green-600 dark:text-green-400" />
+                        <span className="w-6 h-6"><BookOpenIcon /></span>
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">书架书籍</p>
@@ -216,7 +215,7 @@ export default function ProfilePage() {
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                     <div className="flex items-center">
                       <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                        <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        <span className="w-6 h-6"><ClockIcon /></span>
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">阅读时长</p>

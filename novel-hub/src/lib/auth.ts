@@ -26,7 +26,7 @@ export interface UserProfile extends User {
 }
 
 // 创建 Supabase 客户端
-function createClient() {
+function createSupabaseClient() {
   const cookieStore = cookies();
   
   return createClient(supabaseUrl!, supabaseAnonKey!, {
@@ -46,7 +46,7 @@ function createClient() {
 
 // 用户认证相关函数
 export async function signUp(email: string, password: string, username: string) {
-  const supabase = createClient();
+  const supabase = createSupabaseClient();
   
   // 检查用户名是否已存在
   const { data: existingUser } = await supabase
@@ -105,7 +105,7 @@ export async function signUp(email: string, password: string, username: string) 
 }
 
 export async function signIn(email: string, password: string) {
-  const supabase = createClient();
+  const supabase = createSupabaseClient();
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -116,7 +116,7 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
-  const supabase = createClient();
+  const supabase = createSupabaseClient();
   
   const { error } = await supabase.auth.signOut();
   
@@ -128,7 +128,7 @@ export async function signOut() {
 }
 
 export async function getCurrentUser() {
-  const supabase = createClient();
+  const supabase = createSupabaseClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -144,7 +144,7 @@ export async function getCurrentUser() {
 }
 
 export async function updateUserProfile(userId: string, updates: Partial<User>) {
-  const supabase = createClient();
+  const supabase = createSupabaseClient();
   
   const { data, error } = await supabase
     .from('users')
@@ -176,7 +176,7 @@ export function getVIPDiscount(vipLevel: number): number {
 
 // 起点币相关函数
 export async function addCoins(userId: string, amount: number, reason: string) {
-  const supabase = createClient();
+  const supabase = createSupabaseClient();
   
   const { data: user } = await supabase
     .from('users')
